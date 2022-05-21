@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Report Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="text-center max-w-4xl m-auto mt-4">
+      <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            PDF Report Generator
+          </h3>
+          <p class="mt-1 text-sm text-center text-gray-500">
+            It takes around around 5 seconds to crate the PDF report.
+          </p>
+          <p class="mt-1 text-sm text-center text-red-500">
+            NB! Download will start automatically (via sockets)!
+          </p>
+        </div>
+        <div class="border-t border-gray-200">
+          <dl>
+            <div
+              class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+            >
+              <dt class="text-sm font-medium text-gray-500">Author:</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                Aleksei Dmitrijev
+              </dd>
+            </div>
+            <div
+              class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+            >
+              <dt class="text-sm font-medium text-gray-500">Position:</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                Full-Stack Developer
+              </dd>
+            </div>
+            <div
+              class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+            >
+              <dt class="text-sm font-medium text-gray-500">Tools:</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                NodeJs, FeatherJs, TypeScript, TailwindCss, SocketIo
+              </dd>
+            </div>
+            <div
+              class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+            >
+              <dt class="text-sm font-medium text-gray-500">
+                <select
+                  id="currency-select-input"
+                  class="rounded-md text-yellow-500 border-2 border-yellow-500 text-center"
+                >
+                  <option>BTC</option>
+                  <option>ETH</option>
+                  <option>SOL</option>
+                  <option>ADA</option>
+                  <option>NEO</option>
+                  <option>BNB</option>
+                  <option>TRX</option>
+                  <option>DOGE</option>
+                </select>
+              </dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <button
+                  id="download-report"
+                  type="button"
+                  class="bg-yellow-500 text-white p-2 rounded-md hover:bg-yellow-600"
+                >
+                  Create report
+                </button>
+              </dd>
+            </div>
+            <div
+              class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+            >
+              <dt class="text-sm font-medium text-gray-500">App:</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                An API generating PDF reports and a UI requesting and
+                downloading these reports. Report is in candlestick bars format.
+                <br />
+                <span class="text-red-500"
+                  >NB! Long lasting requests are handled via
+                  <b>Worker threads</b></span
+                >
+              </dd>
+            </div>
+            <div
+              class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+            >
+              <dt class="text-sm font-medium text-gray-500">Reports</dt>
+              <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <ul
+                  role="list"
+                  id="generated-reports-list"
+                  class="border border-gray-200 rounded-md divide-y divide-gray-200"
+                >
+                  <div class="p-2">
+                    <svg
+                      class="flex-shrink-0 h-5 w-5 text-gray-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </main>
+
+    <script src="http://localhost:3030/socket.io/socket.io.js"></script>
+    <script>
+      const baseUrl = 'http://localhost:3030/';
+      const socket = io(baseUrl);
+      const downloadButton = document.getElementById('download-report');
+      const DISABLED_CLASS_NAMES =
+        ' bg-gray-300 hover:bg-gray-400 cursor-not-allowed';
+
+      socket.on('connect', () => {
+        console.log('connected');
+      });
+
+      if (downloadButton) {
+        downloadButton.addEventListener('click', () => {
+          const currencyCode = document.getElementById(
+            'currency-select-input'
+          ).value;
+          const disabled = downloadButton.getAttribute('disabled');
+          if (currencyCode && !disabled) {
+            socket.emit('create', 'reports', { currencyCode });
+            downloadButton.className =
+              downloadButton.className + DISABLED_CLASS_NAMES;
+            downloadButton.setAttribute('disabled', 'true');
+          }
+        });
+      }
+
+      const appendToList = (reports) =>
+        reports.forEach((report) => {
+          // create dom element for li
+          const list = document.getElementById('generated-reports-list');
+          const container = document.createElement('li');
+          container.className =
+            'pl-3 pr-4 py-3 flex items-center justify-between text-sm';
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'w-0 flex-1 flex items-center';
+
+          const icon = document.createElement('svg');
+          icon.className = 'flex-shrink-0 h-5 w-5 text-gray-400';
+          icon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          icon.setAttribute('viewBox', '0 0 20 20');
+          icon.setAttribute('fill', 'currentColor');
+          icon.setAttribute('aria-hidden', 'true');
+
+          const iconPath = document.createElement('path');
+          iconPath.setAttribute('fill-rule', 'evenodd');
+          iconPath.setAttribute('clip-rule', 'evenodd');
+          iconPath.setAttribute(
+            'd',
+            'M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z'
+          );
+
+          const text = document.createElement('span');
+          text.className = 'ml-2 flex-1 w-0 truncate';
+
+          const linkWrapper = document.createElement('div');
+          linkWrapper.className = 'ml-4 flex-shrink-0';
+
+          const link = document.createElement('a');
+          link.target = '_blank';
+          link.className = 'font-medium text-indigo-600 hover:text-indigo-500';
+          link.href = `${baseUrl}${report.fileId}.pdf`;
+          link.innerText = `Download: ${report.fileId}.pdf`;
+
+          list.appendChild(container);
+          container.appendChild(wrapper);
+
+          container.appendChild(icon);
+          icon.appendChild(iconPath);
+          wrapper.appendChild(text);
+          wrapper.appendChild(linkWrapper);
+          linkWrapper.appendChild(link);
+        });
+
+      socket.emit('find', 'generated-reports', {}, (error, result) => {
+        const { data } = result;
+        appendToList(data);
+      });
+      const downloadFile = (filePath) => {
+        const link = document.createElement('a');
+        link.href = filePath;
+        link.download = filePath.substr(filePath.lastIndexOf('/') + 1);
+        link.click();
+      };
+
+      socket.on('generated-reports created', function (generatedReport) {
+        if (generatedReport?.fileId) {
+          appendToList([generatedReport]);
+          const path = `${baseUrl}/${generatedReport.fileId}.pdf`;
+          downloadFile(path);
+        }
+        downloadButton.removeAttribute('disabled');
+        downloadButton.className = downloadButton.className.replace(
+          DISABLED_CLASS_NAMES,
+          ''
+        );
+        console.log('Report received: ', generatedReport);
+      });
+
+      console.log('socket', socket);
+    </script>
+  </body>
+</html>
