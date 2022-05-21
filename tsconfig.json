@@ -3,11 +3,12 @@
     "target": "es2018",
     "module": "commonjs",
     "outDir": "./lib",
+    "allowJs": true,
+    "sourceMap": true,
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true
   },
-  "exclude": [
-    "test"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["test"]
 }
