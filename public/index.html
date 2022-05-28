@@ -127,10 +127,12 @@
       </div>
     </main>
 
-    <script src="http://localhost:3030/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
       const baseUrl = 'http://localhost:3030/';
-      const socket = io(baseUrl);
+      const socket = io(baseUrl, {
+        rejectUnauthorized: false,
+      });
       const downloadButton = document.getElementById('download-report');
       const DISABLED_CLASS_NAMES =
         ' bg-gray-300 hover:bg-gray-400 cursor-not-allowed';
@@ -227,7 +229,7 @@
         console.log('Report received: ', generatedReport);
       });
 
-      console.log('socket', socket);
+      console.log(socket);
     </script>
   </body>
 </html>

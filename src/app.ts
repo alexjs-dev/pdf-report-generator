@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import path from 'path';
 import favicon from 'serve-favicon';
 import compress from 'compression';
@@ -8,7 +9,6 @@ import feathers from '@feathersjs/feathers';
 import configuration from '@feathersjs/configuration';
 import express from '@feathersjs/express';
 import socketio from '@feathersjs/socketio';
-
 
 import { Application } from './declarations';
 import logger from './logger';
@@ -21,14 +21,19 @@ import authentication from './authentication';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const app: Application = express(feathers());
-export type HookContext<T = any> = { app: Application } & FeathersHookContext<T>;
+export type HookContext<T = any> = {
+  app: Application;
+} & FeathersHookContext<T>;
 
 // Load app configuration
+// @ts-ignore
 app.configure(configuration());
 // Enable security, CORS, compression, favicon and body parsing
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 app.use(cors());
 app.use(compress());
 app.use(express.json());
@@ -39,7 +44,6 @@ app.use('/', express.static(app.get('public')));
 
 // Set up Plugins and providers
 app.configure(express.rest());
-app.configure(socketio());
 
 // Configure other middleware (see `middleware/index.ts`)
 app.configure(middleware);
@@ -54,5 +58,6 @@ app.use(express.notFound());
 app.use(express.errorHandler({ logger } as any));
 
 app.hooks(appHooks);
+app.configure(socketio());
 
 export default app;
